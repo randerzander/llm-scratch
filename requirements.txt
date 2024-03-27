@@ -1,0 +1,14 @@
+ragatouille
+faiss-gpu
+beautifulsoup4
+duckduckgo-search
+autoawq
+
+surya-ocr
+
+# for console stuff
+rich
+readchar
+
+# for topic modeling
+bertopic datasets
