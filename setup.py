@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='llm_scratch',
-    version='0.1.1',
+    version='0.1.3',
     packages=find_packages(),
     description='A collection of LLM utils',
     long_description=open('README.md').read(),

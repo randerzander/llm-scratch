@@ -28,6 +28,7 @@ def get_to_battle():
     move("left", 5)
     pyboy.screen.image.save("building.png")
     move("down")
+    pyboy.screen.image.save("town.png")
 
     # go into grass
     move("right", 5)
@@ -44,6 +45,7 @@ def get_to_battle():
     advance_dialog(17)
     pyboy.button("start", button_frames)
     pyboy.tick(500)
+    pyboy.screen.image.save("building2.png")
 
     #initiate battle
     move("down", 4)

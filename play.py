@@ -13,6 +13,7 @@ utils.start_new_game()
 utils.get_to_battle()
 
 img = pyboy.screen.image
+img.save("battle.png")
 art = AsciiArt.from_pillow_image(img)
 print(art.to_terminal(monochrome=True, columns=100))
 
