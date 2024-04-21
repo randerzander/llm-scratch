@@ -29,6 +29,11 @@ def extract_text(image_fn):
     print(t1-t0)
     return text
 
+def yolo(path):
+    from inference import get_model
+    model = get_model(model_id="yolov8n-640")
+    return model.infer(path)
+
 def kosmos(image_file, prompt):
   invoke_url = "https://ai.api.nvidia.com/v1/vlm/microsoft/kosmos-2"
 
