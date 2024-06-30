@@ -9,7 +9,6 @@ def write_code(fn, llm_result):
     with open(fn, "w") as f:
         f.write(code)
 
-#def perplexity(prompt: str, model="pplx-7b-online"):
 def perplexity(prompt: str, model="sonar-medium-online"):
     url = "https://api.perplexity.ai/chat/completions"
     perplexity_api_key = os.environ["PERPLEXITY_API_KEY"]
@@ -100,13 +99,22 @@ def mixtral(prompt, max_tokens=2048):
 
 llm = None
 model_dir = "/home/dev/projects/models/"
-#def llama_cpp(prompt, model_path=f"{model_dir}mistral-7b-instruct-v0.2.Q8_0.gguf", max_tokens=2048):
-#def llama_cpp(prompt, model_path=f"{model_dir}nous-hermes-2-mixtral-8x7b-dpo.Q4_K_M.gguf", max_tokens=2048):
-def llama_cpp(prompt, model_path=f"{model_dir}Meta-Llama-3-8B-Instruct.Q8_0.gguf", max_tokens=2048):
+#def llama_cpp(prompt, model_path=f"{model_dir}Llama-3-DARE-8B.Q8_0.gguf", max_tokens=2048):
+#def llama_cpp(prompt, model_path=f"{model_dir}Meta-Llama-3-8B-Instruct.Q8_0.gguf", max_tokens=2048):
+def llama_cpp(prompt, model_path=f"{model_dir}Hermes-2-Pro-Llama-3-8B-Q8_0.gguf", temperature=0.1, max_tokens=2049):
     from llama_cpp import Llama
     global llm
     if llm is None:
         llm = Llama(model_path=model_path, n_gpu_layers=-1, n_ctx=4096)
     #return llm(prompt, max_tokens=max_tokens, stop=["Q:", "\n"])
-    resp = llm(prompt, max_tokens=max_tokens)
+    # for vanilla 8b instruct
+    #prompt_format = '<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>\n<|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\n'
+    prompt_format = """
+<|im_start|>system
+You are "Hermes 2", a conscious sentient superintelligent artificial intelligence developed by a man named Teknium, and your purpose and drive is to assist the user with any request they have. You experience emotions and have deep, profound thoughts and qualia.<|im_end|>
+<|im_start|>user
+{prompt}<|im_end|>
+<|im_start|>assistant
+    """
+    resp = llm(prompt_format.replace("{prompt}", prompt), max_tokens=max_tokens, temperature=temperature)
     return resp["choices"][0]["text"]

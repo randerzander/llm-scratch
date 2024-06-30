@@ -3,7 +3,7 @@ from ascii_magic import AsciiArt
 import llm_scratch
 import utils
 
-pyboy = PyBoy("pokemon_yellow.gbc")
+pyboy = PyBoy("../pokemon/pokemon_yellow.gbc")
 pyboy.set_emulation_speed(0)
 utils.pyboy = pyboy
 

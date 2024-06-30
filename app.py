@@ -1,11 +1,11 @@
 import streamlit as st
 import sys
-from llm_scratch import smaug
+from llm_scratch import llama_cpp as llm
 
 # Function to simulate task generation based on user input
 def generate_tasks(user_input):
     # Placeholder for actual task generation logic
-    response = smaug(f"""
+    response = llm(f"""
 {user_input}
 
 Create a newline delimited list of subtasks to accomplish the above goal

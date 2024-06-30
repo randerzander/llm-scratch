@@ -24,6 +24,7 @@ def llm_answer(question, relevant_content, llm):
 def parallel(func, args):
     t0 = time.time()
     cpus = multiprocessing.cpu_count()
+    cpus = 1
     with multiprocessing.Pool(processes=cpus) as pool:
         result = pool.map(func, args)
     t1 = time.time()
@@ -56,7 +57,7 @@ def read_urls_assess_relevance(urls, query, chunk_size=1000, k=5):
     return find_relevant_content(query, content, chunk_size, k)
 
 
-def research(question: str, llm):
+def research(question: str, llm, k=8):
     from duckduckgo_search import DDGS
 
     t_start = time.time()
