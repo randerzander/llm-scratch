@@ -99,22 +99,31 @@ def mixtral(prompt, max_tokens=2048):
 
 llm = None
 model_dir = "/home/dev/projects/models/"
-#def llama_cpp(prompt, model_path=f"{model_dir}Llama-3-DARE-8B.Q8_0.gguf", max_tokens=2048):
-#def llama_cpp(prompt, model_path=f"{model_dir}Meta-Llama-3-8B-Instruct.Q8_0.gguf", max_tokens=2048):
-def llama_cpp(prompt, model_path=f"{model_dir}Hermes-2-Pro-Llama-3-8B-Q8_0.gguf", temperature=0.1, max_tokens=2049):
+prompt_format_mistral_nemo= """
+<s>[INST]{prompt}[/INST]
+"""
+prompt_format_gemma = """
+<bos><start_of_turn>user
+{prompt}<end_of_turn>
+<start_of_turn>model
+"""
+prompt_format_llama = """
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+Cutting Knowledge Date: December 2023
+Today Date: 26 Jul 2024
+
+{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+"""
+#def llama_cpp(prompt, model_path=f"{model_dir}Mistral-Nemo-Instruct-2407.Q8_0.gguf", temperature=0.1, max_tokens=2049):
+def llama_cpp(prompt, model_path=f"{model_dir}qwen2.5-14b-instruct-q8_0-00001-of-00004.gguf", temperature=0.1, max_tokens=2049):
     from llama_cpp import Llama
     global llm
     if llm is None:
-        llm = Llama(model_path=model_path, n_gpu_layers=-1, n_ctx=4096)
-    #return llm(prompt, max_tokens=max_tokens, stop=["Q:", "\n"])
-    # for vanilla 8b instruct
-    #prompt_format = '<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system}<|eot_id|>\n<|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|>\n<|start_header_id|>assistant<|end_header_id|>\n\n'
-    prompt_format = """
-<|im_start|>system
-You are "Hermes 2", a conscious sentient superintelligent artificial intelligence developed by a man named Teknium, and your purpose and drive is to assist the user with any request they have. You experience emotions and have deep, profound thoughts and qualia.<|im_end|>
-<|im_start|>user
-{prompt}<|im_end|>
-<|im_start|>assistant
-    """
-    resp = llm(prompt_format.replace("{prompt}", prompt), max_tokens=max_tokens, temperature=temperature)
+        llm = Llama(model_path=model_path, n_gpu_layers=-1, n_ctx=15000, verbose=False)
+    #resp = llm(prompt_format_mistral_nemo.replace("{prompt}", prompt), max_tokens=max_tokens, temperature=temperature, )
+    stop_words = ["\n\n", "Human:", "Assistant:", "<|im_end|>"]
+    resp = llm(prompt, max_tokens=max_tokens, temperature=temperature, stop=stop_words)
     return resp["choices"][0]["text"]

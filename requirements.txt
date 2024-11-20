@@ -1,14 +1,15 @@
 ragatouille
-faiss-gpu
 beautifulsoup4
 duckduckgo-search
 autoawq
-
-surya-ocr
+byaldi
+diffusers
+sentencepiece
 
 # for console stuff
 rich
 readchar
 
 # for topic modeling
-bertopic datasets
+#bertopic
+#datasets

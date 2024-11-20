@@ -31,7 +31,7 @@ def parallel(func, args):
     print(f"Parallel execution took {t1-t0} seconds for {str(func)} on {len(args)} items")
     return result
 
-def find_relevant_content(query, content, llm, chunk_size=500, k=5):
+def find_relevant_content(query, content, chunk_size=500, k=5):
     from ragatouille import RAGPretrainedModel
     from ragatouille.data import CorpusProcessor
 
@@ -43,18 +43,30 @@ def find_relevant_content(query, content, llm, chunk_size=500, k=5):
 
     t0 = time.time()
     colbert = RAGPretrainedModel.from_pretrained("colbert-ir/colbertv2.0")
+    #print(query)
+    #print(documents)
     relevant_content = [x["content"] for x in colbert.rerank(query=query, documents=documents, k=k)]
     t1 = time.time()
-    print(f"Got {len(relevant_content)} relevant documents in {t1-t0} seconds.. answering w/ LLM")
+    print(f"Got {len(relevant_content)} relevant documents in {t1-t0} seconds..")
     return relevant_content
 
-def read_urls_assess_relevance(urls, query, chunk_size=1000, k=5):
+def read_urls(urls, query=None, assess_relevance=False, chunk_size=1000, k=5):
     t0 = time.time()
     content = parallel(get_plain_text_from_url, urls)
     t1 = time.time()
-    print(f"Got {len(content)} documents.. splitting into chunks")
+    print(f"Got {len(content)} documents..")
 
-    return find_relevant_content(query, content, chunk_size, k)
+    if assess_relevance:
+        print("Assessing relevance..")
+        return find_relevant_content(query, content, chunk_size, k)
+
+    return content
+
+def search(query: str):
+    from duckduckgo_search import DDGS
+    ddgs = DDGS()
+    results = ddgs.text(query)
+    return [result['href'] for result in results]
 
 
 def research(question: str, llm, k=8):
@@ -62,10 +74,7 @@ def research(question: str, llm, k=8):
 
     t_start = time.time()
     t0 = time.time()
-    query = question
-    ddgs = DDGS()
-    results = ddgs.text(query)
-    urls = [result['href'] for result in results]
+    urls = search(question)
     t1 = time.time()
     print(f"Got {len(urls)} search results in {t1-t0} seconds..")
 
