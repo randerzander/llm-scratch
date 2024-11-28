@@ -12,7 +12,8 @@ from llama_index.core.agent import ReActAgent
 from typing import Optional, List, Mapping, Any
 from typing import Any, Iterator
 
-from llm_scratch import llama_cpp as llm
+#from llm_scratch import llama_cpp as llm
+from llm_scratch import meta_llama as llm
 from llm_scratch import search, read_urls, find_relevant_content, get_plain_text_from_url
 from llm_scratch import text_to_voice
 

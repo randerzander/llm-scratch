@@ -5,6 +5,8 @@ autoawq
 byaldi
 diffusers
 sentencepiece
+elevenlabs
+anthropic
 
 # for console stuff
 rich

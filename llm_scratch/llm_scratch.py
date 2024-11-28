@@ -56,10 +56,11 @@ def make_messages(prompt):
                 "content": prompt
             }
         ]
+        return messages
     else:
         return prompt
 
-def gpt4(prompt, model="gpt-4-0125-preview"):
+def openai(prompt, model="gpt-4o-mini"):
     from openai import OpenAI
     client = OpenAI()
 
@@ -68,7 +69,22 @@ def gpt4(prompt, model="gpt-4-0125-preview"):
         messages=make_messages(prompt)
     ).choices[0].message.content
 
-def aiplayground(prompt, model="meta/llama3-70b", max_tokens=2000, temperature=0.1, top_p=1):
+def gpt_o1(prompt):
+    return openai(prompt, model="o1-preview")
+
+def gpt_o1_mini(prompt):
+    return openai(prompt, model="o1-mini")
+
+def gpt_4o(prompt, model="gpt-4o"):
+    return openai(prompt, model=model)
+
+def gpt_4o_mini(prompt, model="gpt-4o-mini"):
+    return openai(prompt, model=model)
+
+def meta_llama(prompt, model="nvidia/llama-3.1-nemotron-70b-instruct", max_tokens=2000, temperature=0.1, top_p=1):
+  return aiplayground(prompt, model=model, max_tokens=max_tokens, temperature=temperature, top_p=top_p)
+
+def aiplayground(prompt, model, max_tokens=2000, temperature=0.1, top_p=1):
     from openai import OpenAI
 
     client = OpenAI(
