@@ -1,0 +1,4 @@
+html-to-markdown
+html2md/*.egg-info
+html2md/__pycache__
+*__pycache__
