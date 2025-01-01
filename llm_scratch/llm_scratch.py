@@ -127,13 +127,48 @@ Today Date: 26 Jul 2024
 
 {prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 """
+
+prompt_format_qwen = """
+<|im_start|>system
+{system_prompt}<|im_end|>
+<|im_start|>user
+{prompt}<|im_end|>
+<|im_start|>assistant
+
+"""
+
+prompt_format_phi = """
+<|im_start|>system<|im_sep|>system message<|im_end|>
+<|im_start|>user<|im_sep|>{prompt}<|im_end|>
+<|im_start|>assistant<|im_sep|>
+"""
+def phi4(prompt, model_path=f"{model_dir}phi-4-Q8_0.gguf", temperature=0.1, max_tokens=10000):
+    return llama_cpp(prompt, model_path=model_path, temperature=temperature, max_tokens=max_tokens)
+
 #def llama_cpp(prompt, model_path=f"{model_dir}Mistral-Nemo-Instruct-2407.Q8_0.gguf", temperature=0.1, max_tokens=2049):
-def llama_cpp(prompt, model_path=f"{model_dir}qwen2.5-14b-instruct-q8_0-00001-of-00004.gguf", temperature=0.1, max_tokens=2049):
+#def llama_cpp(prompt, model_path=f"{model_dir}yi-34b-chat.Q6_K.gguf", temperature=0.1, max_tokens=2049):
+#def llama_cpp(prompt, model_path=f"{model_dir}qwen2.5-14b-instruct-q8_0-00001-of-00004.gguf", temperature=0.1, max_tokens=2049):
+#def llama_cpp(prompt, model_path=f"{model_dir}EVA-Qwen2.5-14B-v0.2-Q8_0.gguf", temperature=0.1, max_tokens=2049):
+def llama_cpp(prompt, model_path=f"{model_dir}phi-4-Q8_0.gguf", temperature=0.1, max_tokens=10000):
     from llama_cpp import Llama
     global llm
     if llm is None:
         llm = Llama(model_path=model_path, n_gpu_layers=-1, n_ctx=15000, verbose=False)
-    #resp = llm(prompt_format_mistral_nemo.replace("{prompt}", prompt), max_tokens=max_tokens, temperature=temperature, )
-    stop_words = ["\n\n", "Human:", "Assistant:", "<|im_end|>"]
+
+    if "qwen" in model_path:
+        prompt = prompt_format_qwen.replace("{prompt}", prompt)
+    elif "gemma" in model_path:
+        prompt = prompt_format_gemma.replace("{prompt}", prompt)
+    elif "llama" in model_path:
+        prompt = prompt_format_llama.replace("{prompt}", prompt)
+    elif "nemo" in model_path:
+        prompt = prompt_format_mistral_nemo.replace("{prompt}", prompt)
+    elif "phi" in model_path:
+        prompt = prompt_format_phi.replace("{prompt}", prompt)
+
+    if "qwen" in model_path:
+        stop_words = ["\n\n", "Human:", "Assistant:", "<|im_end|>"]
+    else:
+        stop_words = []
     resp = llm(prompt, max_tokens=max_tokens, temperature=temperature, stop=stop_words)
     return resp["choices"][0]["text"]

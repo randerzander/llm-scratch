@@ -1,6 +1,7 @@
 import os, requests, json, time, sys
 import multiprocessing
 
+
 def get_plain_text_from_url(url):
     from bs4 import BeautifulSoup
     try:
