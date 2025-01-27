@@ -1,16 +1,14 @@
-from elevenlabs import play
-from elevenlabs.client import ElevenLabs
 import os
-
-from piper.voice import PiperVoice
-from pydub import AudioSegment
-import wave
-import numpy as np
-import sounddevice as sd
 
 
 #def piper(text, out_fn, model_path="/home/dev/projects/models/en_US-lessac-medium.onnx"):
 def piper(text, out_fn, model_path="/home/dev/projects/models/en_US-ryan-medium.onnx"):
+    from piper.voice import PiperVoice
+    from pydub import AudioSegment
+    import wave
+    import numpy as np
+    import sounddevice as sd
+
     voice = PiperVoice.load(model_path)
     
     # Create a temporary WAV file
@@ -41,6 +39,8 @@ def piper_wav(text, out_fn):
 
 
 def text_to_voice(text, out_fn):
+    from elevenlabs.client import ElevenLabs
+
     api_key = os.getenv("ELEVENLABS_API_KEY")
     client = ElevenLabs(
       api_key=api_key,

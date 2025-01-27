@@ -1,6 +1,6 @@
 ragatouille
 beautifulsoup4
-duckduckgo-search
+duckduckgo_search
 autoawq
 byaldi
 diffusers

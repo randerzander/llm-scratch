@@ -1,4 +1,5 @@
-import os, requests, json, time, sys
+import os, requests, json, time, sys, subprocess
+from openai import OpenAI
 
 def add_file(path):
     return open(path, "r").read()
@@ -107,68 +108,121 @@ def aiplayground(prompt, model, max_tokens=2000, temperature=0.1, top_p=1):
           response += chunk.choices[0].delta.content
     return response
 
-llm = None
+def tail_until_condition(file_path, target_line):
+    with open(file_path, 'r') as file:
+        file.seek(0, 2)  # Move to the end of the file
+        while True:
+            line = file.readline()
+            if not line:
+                time.sleep(0.1)  # Sleep briefly to avoid busy waiting
+                continue
+            #print(line.strip())  # Print the line without trailing newline
+            if line.strip() == target_line:
+                break
+
 model_dir = "/home/dev/projects/models/"
-prompt_format_mistral_nemo= """
-<s>[INST]{prompt}[/INST]
-"""
-prompt_format_gemma = """
-<bos><start_of_turn>user
-{prompt}<end_of_turn>
-<start_of_turn>model
-"""
-prompt_format_llama = """
-<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-Cutting Knowledge Date: December 2023
-Today Date: 26 Jul 2024
-
-{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-"""
-
-prompt_format_qwen = """
-<|im_start|>system
-{system_prompt}<|im_end|>
-<|im_start|>user
-{prompt}<|im_end|>
-<|im_start|>assistant
-
-"""
-
-prompt_format_phi = """
-<|im_start|>system<|im_sep|>system message<|im_end|>
-<|im_start|>user<|im_sep|>{prompt}<|im_end|>
-<|im_start|>assistant<|im_sep|>
-"""
-def phi4(prompt, model_path=f"{model_dir}phi-4-Q8_0.gguf", temperature=0.1, max_tokens=10000):
-    return llama_cpp(prompt, model_path=model_path, temperature=temperature, max_tokens=max_tokens)
-
-#def llama_cpp(prompt, model_path=f"{model_dir}Mistral-Nemo-Instruct-2407.Q8_0.gguf", temperature=0.1, max_tokens=2049):
-#def llama_cpp(prompt, model_path=f"{model_dir}yi-34b-chat.Q6_K.gguf", temperature=0.1, max_tokens=2049):
-#def llama_cpp(prompt, model_path=f"{model_dir}qwen2.5-14b-instruct-q8_0-00001-of-00004.gguf", temperature=0.1, max_tokens=2049):
-#def llama_cpp(prompt, model_path=f"{model_dir}EVA-Qwen2.5-14B-v0.2-Q8_0.gguf", temperature=0.1, max_tokens=2049):
-def llama_cpp(prompt, model_path=f"{model_dir}phi-4-Q8_0.gguf", temperature=0.1, max_tokens=10000):
-    from llama_cpp import Llama
-    global llm
-    if llm is None:
-        llm = Llama(model_path=model_path, n_gpu_layers=-1, n_ctx=15000, verbose=False)
-
-    if "qwen" in model_path:
-        prompt = prompt_format_qwen.replace("{prompt}", prompt)
-    elif "gemma" in model_path:
-        prompt = prompt_format_gemma.replace("{prompt}", prompt)
-    elif "llama" in model_path:
-        prompt = prompt_format_llama.replace("{prompt}", prompt)
-    elif "nemo" in model_path:
-        prompt = prompt_format_mistral_nemo.replace("{prompt}", prompt)
-    elif "phi" in model_path:
-        prompt = prompt_format_phi.replace("{prompt}", prompt)
-
-    if "qwen" in model_path:
-        stop_words = ["\n\n", "Human:", "Assistant:", "<|im_end|>"]
+pid = None
+running_model = None
+def start_server(model_path):
+    global pid
+    global running_model
+    if running_model == model_path:
+        return
     else:
-        stop_words = []
-    resp = llm(prompt, max_tokens=max_tokens, temperature=temperature, stop=stop_words)
-    return resp["choices"][0]["text"]
+        stop_server()
+
+    bin_path = "/home/dev/projects/llama.cpp/build/bin/llama-server"
+    log_file = open("llama_server.log", "w")
+    args = ["-m", model_path, "--n-gpu-layers", "1000"]
+    t0 = time.time()
+    pid = subprocess.Popen([bin_path] + args, stdout=log_file, stderr=log_file)
+    print(f"Started {model_path} with pid {pid.pid}")
+    tail_until_condition("llama_server.log", "main: server is listening on http://127.0.0.1:8080 - starting the main loop")
+    t1 = time.time()
+    print(f"Server started in {t1-t0} seconds")
+    running_model = model_path
+
+def stop_server():
+    global pid
+    if pid is not None:
+        pid.kill()
+        pid.wait()
+        pid = None
+    subprocess.run(["pkill", "llama-server"])
+
+def llm(prompt, prompt_template=None):
+    client = OpenAI(base_url="http://localhost:8080/v1")
+    if prompt_template is not None:
+        prompt = prompt_template.replace("{prompt}", prompt)
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are an artificial intelligence assistant and you need to "
+                "engage in a helpful, detailed, polite conversation with a user."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (prompt)
+        },
+    ]
+    response = client.chat.completions.create(model="whatever", messages=messages)
+    content = response.choices[0].message.content
+    return content
+
+chat_messages = None
+def chat(prompt):
+    client = OpenAI(base_url="http://localhost:8080/v1")
+    global chat_messages
+    if chat_messages is None:
+        chat_messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an artificial intelligence assistant and you need to "
+                    "engage in a helpful, detailed, polite conversation with a user."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (prompt)
+            },
+        ]
+    else:
+        chat_messages.append({"role": "user", "content": (prompt)})
+    print(f"Messages: {len(chat_messages)}, chars: {len(str(chat_messages))}, tokens: {len(str(chat_messages))/4.5}")
+    print(chat_messages)
+    global running_model
+    print(running_model)
+    response = client.chat.completions.create(model="whatever", messages=chat_messages)
+    content = response.choices[0].message.content
+    chat_messages.append({"role": "system", "content": content})
+    return content
+
+# qwen-14b 15638MiB
+# 32b q4: 20226MiB
+# 32b q5: 23386MiB
+# 32b q6: 26742MiB
+def r1(prompt=None):
+    model_path = f"{model_dir}DeepSeek-R1-Distill-Qwen-14B-Q8_0.gguf"
+    model_path = f"{model_dir}DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf"
+    model_path = f"{model_dir}DeepSeek-R1-Distill-Qwen-32B-Q5_K_M.gguf"
+    model_path = f"{model_dir}DeepSeek-R1-Distill-Qwen-32B-Q6_K.gguf"
+    start_server(model_path)
+    if prompt is not None:
+        return llm(prompt)
+
+# 11542MiB
+def gemma(prompt=None):
+    model_path = f"{model_dir}gemma-2-9b-it-abliterated-Q8_0.gguf"
+    start_server(model_path)
+    if prompt is not None:
+        return llm(prompt)
+
+# 15828MiB
+def phi4(prompt=None):
+    model_path = f"{model_dir}phi-4-Q8_0.gguf"
+    start_server(model_path)
+    if prompt is not None:
+        return llm(prompt)
