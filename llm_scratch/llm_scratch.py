@@ -171,6 +171,14 @@ def llm(prompt, prompt_template=None):
     content = response.choices[0].message.content
     return content
 
+def get_messages():
+    global chat_messages
+    return chat_messages
+
+def empty_messages():
+    global chat_messages
+    chat_messages = None
+
 chat_messages = None
 def chat(prompt):
     client = OpenAI(base_url="http://localhost:8080/v1")
@@ -191,10 +199,10 @@ def chat(prompt):
         ]
     else:
         chat_messages.append({"role": "user", "content": (prompt)})
-    print(f"Messages: {len(chat_messages)}, chars: {len(str(chat_messages))}, tokens: {len(str(chat_messages))/4.5}")
-    print(chat_messages)
+    print(f"Messages: {len(chat_messages)}, chars: {len(str(chat_messages))}, tokens: {int(len(str(chat_messages))/4.5)}")
+    #print(chat_messages)
     global running_model
-    print(running_model)
+    #print(running_model)
     response = client.chat.completions.create(model="whatever", messages=chat_messages)
     content = response.choices[0].message.content
     chat_messages.append({"role": "system", "content": content})
@@ -204,18 +212,36 @@ def chat(prompt):
 # 32b q4: 20226MiB
 # 32b q5: 23386MiB
 # 32b q6: 26742MiB
+# 70b q5: 25000MiB 2x
 def r1(prompt=None):
     model_path = f"{model_dir}DeepSeek-R1-Distill-Qwen-14B-Q8_0.gguf"
     model_path = f"{model_dir}DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf"
     model_path = f"{model_dir}DeepSeek-R1-Distill-Qwen-32B-Q5_K_M.gguf"
     model_path = f"{model_dir}DeepSeek-R1-Distill-Qwen-32B-Q6_K.gguf"
+    model_path = f"{model_dir}DeepSeek-R1-Distill-Llama-70B-Q5_K_M.gguf"
+    model_path = f"{model_dir}r1-1776-distill-llama-70b-Q5_K_M.gguf"
     start_server(model_path)
     if prompt is not None:
         return llm(prompt)
 
+def qwq(prompt=None):
+    model_path = f"{model_dir}qwq-32b-q8_0.gguf"
+    start_server(model_path)
+    if prompt is not None:
+        return llm(prompt)
+
+
+def daredevil(prompt=None):
+    model_path = f"{model_dir}NeuralDaredevil-8B-abliterated.f16.gguf"
+    start_server(model_path)
+    if prompt is not None:
+        return llm(prompt)
+
+
 # 11542MiB
 def gemma(prompt=None):
-    model_path = f"{model_dir}gemma-2-9b-it-abliterated-Q8_0.gguf"
+    #model_path = f"{model_dir}gemma-2-9b-it-abliterated-Q8_0.gguf"
+    model_path = f"{model_dir}gemma-3-12b-it-abliterated.q8_0.gguf"
     start_server(model_path)
     if prompt is not None:
         return llm(prompt)

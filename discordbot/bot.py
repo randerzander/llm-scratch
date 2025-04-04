@@ -1,8 +1,9 @@
-import discord
-import os
+#from llm_scratch import llama_cpp as llm
+from llm_scratch import gpt_4o as llm
+from ragatouille import RAGPretrainedModel
 
-from llm_scratch import llama_cpp as llm
-from llm_scratch import gpt_4o
+import discord
+import os, time
 
 # Set up intents
 intents = discord.Intents.default()
@@ -32,16 +33,30 @@ async def on_message(message):
 
     if client.user.mentioned_in(message):
         msg = message.content.split(">")[1].strip()
-        cmd = "Is the the above message [helpful, hurtful, condescending, questioning, joking, argumentative]. Answer in as few words as possible"
-        classifier = gpt_4o(f"{msg}\n\n{cmd}")
+        #cmd = "Is the the above message [helpful, hurtful, condescending, questioning, joking, argumentative]. Answer in as few words as possible"
+        #classifier = gpt_4o(f"{msg}\n\n{cmd}")
+        #relevant_poems = lookup()
+        #resp = llm(f"Write a 3 stanza max no yapping poem in the style of tennyson to {txt}")
+        #thread = await message.create_thread(name="response")
+        #await thread.send(resp)
 
-        relevant_poems = lookup()
+        cont = RAG.search(query=msg, k=10)
+        rel_cont = "\n\n".join([c["content"] for c in cont])
+        resp = llm(f"Write a 3 stanza max no yapping poem to address {msg}\n\n{rel_cont}")
+        await message.channel.send(f"{message.author.mention}: {resp}")
 
-        resp = llm(f"Write a 3 stanza max no yapping poem in the style of tennyson to {txt}")
-        thread = await message.create_thread(name="response")
-        await thread.send(resp)
-        #await message.channel.send(f"{message.author.mention}: {resp}")
+def load_rag(index_path):
+    return RAGPretrainedModel.from_index(index_path)
 
 # Run the client
 TOKEN = open("token.txt", "r").read()
+
+txt = open("prompt_jockeying.txt").read()
+messages = txt.split("_|_\n")[:-1]
+
+index_path = '.ragatouille/colbert/indexes/combo_context'
+RAG = load_rag(index_path)
+#cont = RAG.search(query="@UseFool What does randerzaner think about colbert", k=10)
+#rel_cont = "\n\n".join([c["content"] for c in cont])
+#llm(f"Write a 3 stanza max no yapping poem in the style of tennyson to {rel_cont}")
 client.run(TOKEN)

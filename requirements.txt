@@ -8,6 +8,16 @@ sentencepiece
 elevenlabs
 anthropic
 
+markitdown[all]
+
+# bots
+discord
+
+# for embedding stuff
+lancedb
+pylance
+tantivy
+
 # for console stuff
 rich
 readchar
