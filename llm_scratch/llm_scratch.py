@@ -49,6 +49,18 @@ def anthropic(prompt: str, model="claude-3-5-sonnet-latest", max_tokens=2048):
     )
     return message.content[0].text
 
+def gemini(prompt: str, model="gemini-2.0-flash"):
+    from google import genai
+    api_key = os.environ["GEMINI_API_KEY"]
+
+    client = genai.Client(api_key=api_key)
+
+    response = client.models.generate_content(
+        model=model, contents=prompt
+    )
+    return response.text
+
+
 def make_messages(prompt):
     if type(prompt) == str:
         messages = [

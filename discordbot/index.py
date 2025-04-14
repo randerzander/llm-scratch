@@ -45,10 +45,13 @@ def parse_log(fn):
 
 all_dts, all_users, all_posts = [], [], []
 
-embedding_model = SentenceTransformer("BAAI/BGE-Base-EN-v1.5", device='cuda')
+#model_name = "mixedbread-ai/mxbai-embed-large-v1"
+model_name = "sentence-transformers/static-retrieval-mrl-en-v1"
+embedding_model = SentenceTransformer(model_name)
 
 #for fn in ["bot-stuff_1308637302658175006.txt"]:
 dfs = []
+embedding_time = 0
 for fn in os.listdir(base_dir):
     dts, users, posts = parse_log(os.path.join(base_dir, fn))
     df = pd.DataFrame({
@@ -56,8 +59,12 @@ for fn in os.listdir(base_dir):
         "user": users,
         "date": dts
     })
+    df = df.assign(row_id=range(len(df)))
+    t0 = time.time()
     embeddings = embedding_model.encode(posts, normalize_embeddings=True)
     df["vector"] = embeddings.tolist()
+    t1 = time.time()
+    embedding_time = embedding_time + (t1-t0)
     df["channel"] = fn.split("_")[0]
     dfs.append(df)
 
@@ -75,19 +82,20 @@ print(f"Total posts: {len(all_posts)}")
 t1 = time.time()
 log("parse_time", t1 - t0)
 
-t0 = time.time()
-t1 = time.time()
-log("embedding_time", t1 - t0)
+log("embedding_time", embedding_time)
 
 t0 = time.time()
 db = lancedb.connect("./vector_db")
 df = pd.concat(dfs)
+print("Dfs concatted..")
 table = db.create_table(
     "test",
     data=df.to_dict(orient="records"),
     mode="overwrite"  # Overwrite if table exists
 )
-table.create_index(metric="cosine")
+print("Table created..")
+#table.create_index(metric="cosine")
+#print("Index created..")
 table.create_fts_index("post", replace=True)
 t1 = time.time()
 log("db_creation_time", t1 - t0)
