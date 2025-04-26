@@ -49,7 +49,7 @@ def anthropic(prompt: str, model="claude-3-5-sonnet-latest", max_tokens=2048):
     )
     return message.content[0].text
 
-def gemini(prompt: str, model="gemini-2.0-flash"):
+def gemini(prompt: str, model="gemini-2.5-flash-preview-04-17"):
     from google import genai
     api_key = os.environ["GEMINI_API_KEY"]
 
@@ -252,8 +252,7 @@ def daredevil(prompt=None):
 
 # 11542MiB
 def gemma(prompt=None):
-    #model_path = f"{model_dir}gemma-2-9b-it-abliterated-Q8_0.gguf"
-    model_path = f"{model_dir}gemma-3-12b-it-abliterated.q8_0.gguf"
+    model_path = f"{model_dir}gemma-3-27B-it-QAT-Q4_0.gguf"
     start_server(model_path)
     if prompt is not None:
         return llm(prompt)

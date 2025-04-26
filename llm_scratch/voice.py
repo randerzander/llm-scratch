@@ -37,8 +37,16 @@ def piper_wav(text, out_fn):
         wav_file.setframerate(voice.config.sample_rate)
         voice.synthesize(text, wav_file)
 
+def nari(text, out_fn):
+    from dia.model import Dia
+    model = Dia.from_pretrained("nari-labs/Dia-1.6B", compute_dtype="float16")
+    output = model.generate(text, use_torch_compile=True, verbose=True)
+    model.save_audio(out_fn, output)
 
 def text_to_voice(text, out_fn):
+    nari(text, out_fn)
+
+def text_to_voice_old(text, out_fn):
     from elevenlabs.client import ElevenLabs
 
     api_key = os.getenv("ELEVENLABS_API_KEY")

@@ -10,6 +10,8 @@ anthropic
 
 markitdown[all]
 
+google-genai
+
 # bots
 discord
 
