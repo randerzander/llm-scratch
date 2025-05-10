@@ -2,16 +2,20 @@ from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.core.tools import FunctionTool
 from llama_index.core.llms import CustomLLM, CompletionResponse, LLMMetadata
 from llama_index.core.llms.callbacks import llm_completion_callback
+
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.retrievers import BaseRetriever
+
 from llama_index.core.schema import TextNode, NodeWithScore, QueryBundle, Node
+
+from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.core import Settings
 
 from typing import Optional, List, Mapping, Any
 from typing import Any, Iterator
 import asyncio
 
-from llm_scratch import phi4 as llm
+from llm_scratch import gemini as llm
 
 class OurCustomLLM(CustomLLM):
     context_window: int = 3900
@@ -83,4 +87,4 @@ async def query(query_str: str) -> List[str]:
 def q(query_str: str) -> List[str]:
     return asyncio.run(query(query_str))
 
-print(q("What is the weather in San Francisco?"))
+print(q("For aesthetics, what is the optimal number of paddles in a water wheel?"))
